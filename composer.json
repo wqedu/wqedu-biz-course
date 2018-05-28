@@ -1,0 +1,22 @@
+{
+    "name": "wqedu/wqedu-biz-course",
+    "description": "course module",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "fornote",
+            "email": "fornotec@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Biz\\Course": "src/Course/"
+        }
+    },
+    "require": {
+        "codeages/biz-framework": "^0.9",
+        "wqedu/wqedu-biz-base": "dev-master"
+    }
+}

@@ -9,7 +9,6 @@
             "email": "fornotec@gmail.com"
         }
     ],
-    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "Biz\\Course\\": "src/Course/"
@@ -17,7 +16,7 @@
     },
     "require": {
         "codeages/biz-framework": "^0.9",
-        "wqedu/wqedu-biz-base": "dev-master"
+        "wqedu/wqedu-biz-base": "~0.1.0"
     },
     "autoload-dev": {
         "psr-4": { "Tests\\": "tests/" },

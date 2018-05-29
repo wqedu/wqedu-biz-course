@@ -20,7 +20,7 @@
     },
     "require": {
         "codeages/biz-framework": "^0.9",
-        "wqedu/wqedu-biz-base": "~0.1.0",
+        "wqedu/wqedu-biz-base": "~0.1.0"
     },
     "require-dev": {
         "mockery/mockery": "^0.9.9",

@@ -8,10 +8,20 @@
 
 namespace Biz\Course\Dao\Impl;
 
-use Codeages\Biz\Framework\Service\BaseService;
 use Biz\Course\Dao\CourseDao;
+use Codeages\Biz\Framework\Dao\GeneralDaoImpl;
 
-class CourseDaoImpl extends BaseService implements CourseDao
+class CourseDaoImpl extends GeneralDaoImpl implements CourseDao
 {
+    protected $table = 'course';
 
+    public function findCoursesByIds($ids)
+    {
+        // TODO: Implement findCoursesByIds() method.
+    }
+
+    public function declares()
+    {
+        // TODO: Implement declares() method.
+    }
 }

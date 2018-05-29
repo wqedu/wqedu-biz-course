@@ -7,7 +7,23 @@
  */
 namespace Biz\Course\Service;
 
+use Codeages\Biz\Framework\Service\Exception\AccessDeniedException;
+
 interface CourseService
 {
+    public function getCourse($id);
 
+    /*
+    public function findCoursesByIds($ids);
+
+    public function searchCourses($conditions, $sort, $start, $limit);
+
+    public function searchCourseCount($conditions);
+
+    public function createCourse($course);
+
+    public function updateCourse($id, $fields);
+
+    public function deleteCourse($id);
+    */
 }

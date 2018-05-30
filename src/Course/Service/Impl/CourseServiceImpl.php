@@ -10,6 +10,7 @@ namespace Biz\Course\Service\Impl;
 
 use Codeages\Biz\Framework\Service\BaseService;
 use Biz\Course\Service\CourseService;
+use Wqedu\Common\ArrayToolkit;
 
 class CourseServiceImpl extends BaseService implements CourseService
 {
@@ -17,6 +18,38 @@ class CourseServiceImpl extends BaseService implements CourseService
     public function getCourse($id)
     {
         return $this->getCourseDao()->get($id);
+    }
+
+    public function createCourse($course)
+    {
+        if (!ArrayToolkit::requireds($course, array('title'))) {
+            throw $this->createServiceException($this->getKernel()->trans('缺少必要字段，创建课程失败！'));
+        }
+
+        $course                = ArrayToolkit::parts($course, array('title', 'buyable', 'type', 'about', 'category', 'price', 'startTime', 'endTime', 'locationId', 'address', 'orgCode', 'source'));
+        $course['status']      = 'draft';
+        $course['about']       = !empty($course['about']) ? $this->purifyHtml($course['about']) : '';
+        $course['userId']      = $this->getCurrentUser()->id;
+        $course['createdTime'] = time();
+        $course['teacherIds']  = array($course['userId']);
+        $course                = $this->fillOrgId($course);
+        $course                = $this->getCourseDao()->addCourse(CourseSerialize::serialize($course));
+
+        $member = array(
+            'courseId'    => $course['id'],
+            'userId'      => $course['userId'],
+            'role'        => 'teacher',
+            'createdTime' => time()
+        );
+
+        $this->getMemberDao()->addMember($member);
+
+        $course = $this->getCourse($course['id']);
+
+        $this->dispatchEvent("course.create", $course);
+        $this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
+
+        return $course;
     }
 
     /*
@@ -42,37 +75,7 @@ class CourseServiceImpl extends BaseService implements CourseService
         return $this->getCourseDao()->count($conditions);
     }
 
-    public function createCourse($course)
-    {
-        if (!ArrayToolkit::requireds($course, array('title'))) {
-            throw $this->createServiceException($this->getKernel()->trans('缺少必要字段，创建课程失败！'));
-        }
 
-        $course                = ArrayToolkit::parts($course, array('title', 'buyable', 'type', 'about', 'categoryId', 'price', 'startTime', 'endTime', 'locationId', 'address', 'orgCode', 'source'));
-        $course['status']      = 'draft';
-        $course['about']       = !empty($course['about']) ? $this->purifyHtml($course['about']) : '';
-        $course['userId']      = $this->getCurrentUser()->id;
-        $course['createdTime'] = time();
-        $course['teacherIds']  = array($course['userId']);
-        $course                = $this->fillOrgId($course);
-        $course                = $this->getCourseDao()->addCourse(CourseSerialize::serialize($course));
-
-        $member = array(
-            'courseId'    => $course['id'],
-            'userId'      => $course['userId'],
-            'role'        => 'teacher',
-            'createdTime' => time()
-        );
-
-        $this->getMemberDao()->addMember($member);
-
-        $course = $this->getCourse($course['id']);
-
-        $this->dispatchEvent("course.create", $course);
-        $this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
-
-        return $course;
-    }
 
     public function updateCourse($id, $fields)
     {

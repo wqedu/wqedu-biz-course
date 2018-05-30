@@ -13,6 +13,8 @@ interface CourseService
 {
     public function getCourse($id);
 
+    public function createCourse($course);
+
     /*
     public function findCoursesByIds($ids);
 
@@ -20,7 +22,7 @@ interface CourseService
 
     public function searchCourseCount($conditions);
 
-    public function createCourse($course);
+
 
     public function updateCourse($id, $fields);
 

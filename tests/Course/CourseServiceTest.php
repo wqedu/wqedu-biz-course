@@ -14,12 +14,9 @@ class InvoiceServiceTest extends IntegrationTestCase
     {
         $mockCourse = $this->mockCourse();
 
-        $course = $this->getInvoiceService()->applyInvoice($mockCourse);
+        $course = $this->getCourseService()->createCourse($mockCourse);
         $this->assertEquals($mockCourse['title'], $course['title']);
-        $this->assertEquals('unchecked', $course['status']);
-
-        $default = $this->getInvoiceTemplateService()->getDefaultTemplate($course['user_id']);
-        $this->assertNotNull($default);
+        $this->assertEquals('published', $course['status']);
     }
 
     public function testGetCourse()
@@ -30,23 +27,29 @@ class InvoiceServiceTest extends IntegrationTestCase
         $result = $this->getCourseService()->getCourse($course['id']);
 
         $this->assertEquals($mockCourse['title'], $result['title']);
-        $this->assertEquals('unchecked', $result['status']);
+        $this->assertEquals('published', $result['status']);
     }
 
     protected function mockCourse()
     {
         return array(
-            'title' => '购买商品',
-            'callback' => array('url' => 'http://try6.edusoho.cn/'),
-            'source' => 'custom',
-            'price_type' => 'coin',
-            'user_id' => $this->biz['user']['id'],
-            'created_reason' => '购买',
-            'create_extra' => array(
-                'xxx' => 'xxx',
-            ),
-            'device' => 'wap',
-            'expired_refund_days' => 5,
+            'title'             =>  '测试的课程',
+            'subtitle'          =>  '课程副标题',
+            'status'            =>  'published',
+            'type'              =>  'normal',
+            'lessonNum'         =>  '10',
+            'category'          =>  '经济管理,管理学',
+            'tags'              =>  '经济学,管理',
+            'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
+            'smallPicture'      =>  'http://wwww.wqketang.com/small.png',
+            'middlePicture'     =>  'http://wwww.wqketang.com/middle.png',
+            'largePicture'        =>  'http://wwww.wqketang.com/big.png',
+            'about'             =>  '这是课程的介绍',
+            'goals'             =>  array('目标1掌握','目标2数量掌握'),
+            'audiences'         =>  array('大专院校','在校学生'),
+            'parrentId'         =>  0,
+            'createdTime'       =>  time(),
+            'updatedTime'       =>  time()
         );
     }
 

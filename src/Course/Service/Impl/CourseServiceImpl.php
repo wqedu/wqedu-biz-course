@@ -26,28 +26,18 @@ class CourseServiceImpl extends BaseService implements CourseService
             throw $this->createServiceException($this->getKernel()->trans('缺少必要字段，创建课程失败！'));
         }
 
-        $course                = ArrayToolkit::parts($course, array('title', 'buyable', 'type', 'about', 'category', 'price', 'startTime', 'endTime', 'locationId', 'address', 'orgCode', 'source'));
-        $course['status']      = 'draft';
-        $course['about']       = !empty($course['about']) ? $this->purifyHtml($course['about']) : '';
-        $course['userId']      = $this->getCurrentUser()->id;
+        $course                = ArrayToolkit::parts($course, array('title', 'subtitle', 'type', 'lessonNum', 'category', 'tags', 'keypoints', 'smallPicture', 'middlePicture', 'largePicture', 'about', 'goals', 'audiences', 'parentId'));
+        $course['status']      = 'published';
+        $course['about']       = !empty($course['about']) ? $course['about'] : '';
+        //$course['about']       = !empty($course['about']) ? $this->purifyHtml($course['about']) : '';//todo, add htmlhelper
         $course['createdTime'] = time();
-        $course['teacherIds']  = array($course['userId']);
-        $course                = $this->fillOrgId($course);
-        $course                = $this->getCourseDao()->addCourse(CourseSerialize::serialize($course));
-
-        $member = array(
-            'courseId'    => $course['id'],
-            'userId'      => $course['userId'],
-            'role'        => 'teacher',
-            'createdTime' => time()
-        );
-
-        $this->getMemberDao()->addMember($member);
+        $course['updatedTime'] = time();
+        $course                = $this->getCourseDao()->create(CourseSerialize::serialize($course));
 
         $course = $this->getCourse($course['id']);
 
-        $this->dispatchEvent("course.create", $course);
-        $this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
+        //$this->dispatchEvent("course.create", $course);
+        //$this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
 
         return $course;
     }
@@ -247,7 +237,7 @@ class CourseServiceImpl extends BaseService implements CourseService
      */
     protected function getCourseDao()
     {
-        return $this->createDao('Course:CourseDao');
+        return $this->biz->dao('Course:CourseDao');
     }
 
     /**
@@ -255,11 +245,77 @@ class CourseServiceImpl extends BaseService implements CourseService
      */
     protected function getChapterDao()
     {
-        return $this->createDao('Course:CourseChapterDao');
+        return $this->biz->dao('Course:CourseChapterDao');
     }
 
     protected function getLessonDao()
     {
-        return $this->createDao('Course.LessonDao');
+        return $this->biz->dao('Course.LessonDao');
+    }
+}
+
+class CourseSerialize
+{
+    public static function serialize(array &$course)
+    {
+        if (isset($course['keypoints'])) {
+            if (is_array($course['keypoints']) && !empty($course['keypoints'])) {
+                $course['keypoints'] = serialize($course['keypoints']);
+            } else {
+                $course['keypoints'] = serialize(array());
+            }
+        }
+
+        if (isset($course['goals'])) {
+            if (is_array($course['goals']) && !empty($course['goals'])) {
+                $course['goals'] = '|'.implode('|', $course['goals']).'|';
+            } else {
+                $course['goals'] = '';
+            }
+        }
+
+        if (isset($course['audiences'])) {
+            if (is_array($course['audiences']) && !empty($course['audiences'])) {
+                $course['audiences'] = '|'.implode('|', $course['audiences']).'|';
+            } else {
+                $course['audiences'] = '';
+            }
+        }
+
+        return $course;
+    }
+
+    public static function unserialize(array $course = null)
+    {
+        if (empty($course)) {
+            return $course;
+        }
+
+        if (empty($course['keypoints'])) {
+            $course['goals'] = array();
+        } else {
+            $course['goals'] = unserialize($course['keypoints']);
+        }
+
+        if (empty($course['goals'])) {
+            $course['goals'] = array();
+        } else {
+            $course['goals'] = explode('|', trim($course['goals'], '|'));
+        }
+
+        if (empty($course['audiences'])) {
+            $course['audiences'] = array();
+        } else {
+            $course['audiences'] = explode('|', trim($course['audiences'], '|'));
+        }
+
+        return $course;
+    }
+
+    public static function unserializes(array $courses)
+    {
+        return array_map(function ($course) {
+            return CourseSerialize::unserialize($course);
+        }, $courses);
     }
 }

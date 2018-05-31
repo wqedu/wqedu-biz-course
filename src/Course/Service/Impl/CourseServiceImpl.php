@@ -17,7 +17,10 @@ class CourseServiceImpl extends BaseService implements CourseService
 
     public function getCourse($id)
     {
-        return $this->getCourseDao()->get($id);
+        $course  = $this->getCourseDao()->get($id);
+
+        $course = CourseSerialize::unserialize($course);
+        return ( $course );
     }
 
     public function createCourse($course)
@@ -40,6 +43,24 @@ class CourseServiceImpl extends BaseService implements CourseService
         //$this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
 
         return $course;
+    }
+
+    public function updateCourse($id, $fields)
+    {
+        $course   = $this->getCourseDao()->get($id);
+
+        if (empty($course)) {
+            throw $this->createServiceException($this->getKernel()->trans('课程不存在，更新失败！'));
+        }
+        $fields = $this->_filterCourseFields($fields);
+
+        //$this->getLogService()->info('course', 'update', "更新课程《{$course['title']}》(#{$course['id']})的信息", $fields);
+
+        $fields        = CourseSerialize::serialize($fields);
+
+        $updatedCourse = $this->getCourseDao()->update($id, $fields);
+
+        return CourseSerialize::unserialize($updatedCourse);
     }
 
     /*
@@ -67,39 +88,7 @@ class CourseServiceImpl extends BaseService implements CourseService
 
 
 
-    public function updateCourse($id, $fields)
-    {
-        $user = $this->getCurrentUser();
 
-        $argument = $fields;
-
-        $tagIds   = empty($fields['tagIds']) ? array() : $fields['tagIds'];
-
-        $course   = $this->getCourseDao()->getCourse($id);
-
-        if (empty($course)) {
-            throw $this->createServiceException($this->getKernel()->trans('课程不存在，更新失败！'));
-        }
-        $fields = $this->_filterCourseFields($fields);
-
-        //非法提交直接报错,service应该有反馈
-        if (!empty($fields['expiryMode']) &&
-            $course['status'] == 'published' &&
-            $fields['expiryMode'] != $course['expiryMode']) {
-            throw $this->createServiceException('已发布的课程不允许修改学员有效期');
-        }
-
-        $this->getLogService()->info('course', 'update', "更新课程《{$course['title']}》(#{$course['id']})的信息", $fields);
-
-        $fields        = $this->fillOrgId($fields);
-        $fields        = CourseSerialize::serialize($fields);
-
-        $updatedCourse = $this->getCourseDao()->updateCourse($id, $fields);
-
-        $this->dispatchEvent("course.update", array('argument' => $argument, 'course' => $updatedCourse, 'sourceCourse' => $course, 'tagIds' => $tagIds, 'userId' => $user['id']));
-
-        return CourseSerialize::unserialize($updatedCourse);
-    }
 
     public function deleteCourse($id)
     {
@@ -232,6 +221,29 @@ class CourseServiceImpl extends BaseService implements CourseService
     }
     */
 
+    protected function _filterCourseFields($fields)
+    {
+        $fields = ArrayToolkit::filter($fields, array(
+            'title'             =>  '',
+            'subtitle'          =>  '',
+            'status'            =>  'published',
+            'type'              =>  'normal',
+            'lessonNum'         =>  0,
+            'category'          =>  '',
+            'tags'              =>  '',
+            'keypoints'         =>  array(),
+            'smallPicture'      =>  '',
+            'middlePicture'     =>  '',
+            'largePicture'      =>  '',
+            'about'             =>  '',
+            'goals'             =>  array(),
+            'audiences'         =>  array(),
+            'parentId'          =>  0,
+        ));
+
+        return $fields;
+    }
+
     /**
      * @return CourseDao
      */
@@ -292,9 +304,9 @@ class CourseSerialize
         }
 
         if (empty($course['keypoints'])) {
-            $course['goals'] = array();
+            $course['keypoints'] = array();
         } else {
-            $course['goals'] = unserialize($course['keypoints']);
+            $course['keypoints'] = unserialize($course['keypoints']);
         }
 
         if (empty($course['goals'])) {

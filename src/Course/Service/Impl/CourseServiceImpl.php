@@ -121,9 +121,13 @@ class CourseServiceImpl extends BaseService implements CourseService
             throw $this->createNotFoundException("Chapter#{$chapterId} Not Found");
         }
 
-        $fields = ArrayToolkit::parts($fields, array('title', 'number', 'seq', 'parentId'));
+        $fields = $this->_filterCourseChapterFields($fields);
+
+        $fields = KeypointsSerialize::serialize($fields);
 
         $chapter = $this->getChapterDao()->update($chapterId, $fields);
+
+        $chapter = KeypointsSerialize::unserialize($chapter);
 
         return $chapter;
     }

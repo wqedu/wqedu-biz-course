@@ -57,6 +57,38 @@ class CourseChapterServiceTest extends IntegrationTestCase
         $this->assertEquals($chapter['title'], $result['title']);
     }
 
+    /**
+     * @depends testCreateChapter
+     */
+    public function testUpdateChapter(array $chapter)
+    {
+        $mockUpdateChapter = $this->mockUpdateChapter();
+
+        $chapter = $this->getCourseService()->createChapter($chapter);
+
+        $updateChapter = $this->getCourseService()->updateChapter($chapter['courseId'], $chapter['id'], $mockUpdateChapter);
+
+        $this->assertEquals($mockUpdateChapter['title'], $updateChapter['title']);
+        $this->assertEquals($mockUpdateChapter['type'], $updateChapter['type']);
+        $this->assertEquals($mockUpdateChapter['parentId'], $updateChapter['parentId']);
+        $this->assertEquals($mockUpdateChapter['number'], $updateChapter['number']);
+        $this->assertEquals($mockUpdateChapter['seq'], $updateChapter['seq']);
+        $this->assertEquals($mockUpdateChapter['keypoints'], $updateChapter['keypoints']);
+    }
+
+    /**
+     * @depends testCreateChapter
+     */
+    public function testDeleteChapter(array $chapter)
+    {
+        $chapter = $this->getCourseService()->createChapter($chapter);
+
+        $this->getCourseService()->deleteChapter($chapter['courseId'], $chapter['id']);
+
+        $deletedChapter = $this->getCourseService()->getChapter($chapter['courseId'],$chapter['id']);
+
+        $this->assertEmpty($deletedChapter);
+    }
 
     protected function mockCourse()
     {
@@ -104,6 +136,18 @@ class CourseChapterServiceTest extends IntegrationTestCase
             'seq'               =>  0,
             'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
             'createdTime'       =>  time(),
+        );
+    }
+
+    protected function mockUpdateChapter()
+    {
+        return array(
+            'title'             =>  '第一章更新',
+            'type'              =>  'unit',
+            'parentId'          =>  1,
+            'number'            =>  2,
+            'seq'               =>  3,
+            'keypoints'         =>  array('100001'=>'经济学1','100002'=>'管理学2')
         );
     }
 

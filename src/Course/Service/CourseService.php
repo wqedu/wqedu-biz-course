@@ -44,4 +44,8 @@ interface CourseService
     /*
      * 课时接口
      */
+
+    public function getLesson($id);
+
+    public function createLesson($lesson);
 }

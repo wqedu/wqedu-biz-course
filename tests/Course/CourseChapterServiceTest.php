@@ -90,6 +90,26 @@ class CourseChapterServiceTest extends IntegrationTestCase
         $this->assertEmpty($deletedChapter);
     }
 
+    public function testGetCourseChapters()
+    {
+        $mockCourse = $this->mockCourse();
+        $course = $this->getCourseService()->createCourse($mockCourse);
+
+        $mockChapter = $this->mockChapter();
+        $mockChapter['courseId'] = $course['id'];
+        $chapter = $this->getCourseService()->createChapter($mockChapter);
+
+        $mockUnit = $this->mockUnit();
+        $mockUnit['courseId'] = $course['id'];
+        $mockUnit['parentId'] = $chapter['id'];
+        $unit = $this->getCourseService()->createChapter($mockUnit);
+
+        $chapters = $this->getCourseService()->getCourseChapters($course['id']);
+
+        $this->assertEquals($chapters[0], $chapter);
+        $this->assertEquals($chapters[1], $unit);
+    }
+
     protected function mockCourse()
     {
         return array(
@@ -119,8 +139,8 @@ class CourseChapterServiceTest extends IntegrationTestCase
             'title'             =>  '第一章',
             'type'              =>  'chapter',
             'parentId'          =>  0,
-            'number'            =>  0,
-            'seq'               =>  0,
+            'number'            =>  1,
+            'seq'               =>  1,
             'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
             'createdTime'       =>  time(),
         );
@@ -132,8 +152,8 @@ class CourseChapterServiceTest extends IntegrationTestCase
             'title'             =>  '第一章',
             'type'              =>  'unit',
             'parentId'          =>  0,
-            'number'            =>  0,
-            'seq'               =>  0,
+            'number'            =>  1,
+            'seq'               =>  2,
             'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
             'createdTime'       =>  time(),
         );

@@ -145,6 +145,91 @@ class CourseServiceImpl extends BaseService implements CourseService
         //$this->getLogService()->info('course', 'delete_chapter', "删除章节(#{$chapterId})", $deletedChapter);
     }
 
+    /*
+     * 课时接口
+     */
+    public function createLesson($lesson)
+    {
+        $argument = $lesson;
+        $lesson   = ArrayToolkit::filter($lesson, array(
+            'courseId'      => 0,
+            'chapterId'     => 0,
+            'free'          => 0,
+            'title'         => '',
+            'summary'       => '',
+            'type'          => 'text',
+            'content'       => '',
+            'media'         => array(),
+            'mediaId'       => 0,
+            'length'        => 0,
+            'startTime'     => 0,
+            'giveCredit'    => 0,
+            'requireCredit' => 0,
+            'liveProvider'  => 'none',
+            'copyId'        => 0,
+            'testMode'      => 'normal',
+            'testStartTime' => 0
+        ));
+
+        if (!ArrayToolkit::requireds($lesson, array('courseId', 'title', 'type'))) {
+            throw $this->createServiceException($this->getKernel()->trans('参数缺失，创建课时失败！'));
+        }
+
+        if (empty($lesson['courseId'])) {
+            throw $this->createServiceException($this->getKernel()->trans('添加课时失败，课程ID为空。'));
+        }
+
+        $course = $this->getCourse($lesson['courseId'], true);
+
+        if (empty($course)) {
+            throw $this->createServiceException($this->getKernel()->trans('添加课时失败，课程不存在。'));
+        }
+
+        if (!in_array($lesson['type'], array('text', 'audio', 'video', 'testpaper', 'live', 'ppt', 'document', 'flash', 'open', 'liveOpen'))) {
+            throw $this->createServiceException($this->getKernel()->trans('课时类型不正确，添加失败！'));
+        }
+
+        $this->fillLessonMediaFields($lesson);
+
+
+        if (isset($fields['title'])) {
+            $fields['title'] = $this->purifyHtml($fields['title']);
+        }
+
+        // 课程处于发布状态时，新增课时，课时默认的状态为“未发布"
+        $lesson['status']      = $course['status'] == 'published' ? 'unpublished' : 'published';
+        $lesson['free']        = empty($lesson['free']) ? 0 : 1;
+        $lesson['number']      = $this->getNextLessonNumber($lesson['courseId']);
+        $lesson['seq']         = $this->getNextCourseItemSeq($lesson['courseId']);
+        $lesson['userId']      = $this->getCurrentUser()->id;
+        $lesson['createdTime'] = time();
+
+        $lastChapter         = $this->getChapterDao()->getLastChapterByCourseId($lesson['courseId']);
+        $lesson['chapterId'] = empty($lastChapter) ? 0 : $lastChapter['id'];
+
+        if ($lesson['type'] == 'live') {
+            $lesson['endTime'] = $lesson['startTime'] + $lesson['length'] * 60;
+        }
+
+        $lesson = $this->getLessonDao()->addLesson(
+            LessonSerialize::serialize($lesson)
+        );
+
+        $argument['id'] = $lesson['id'];
+        $lessonExtend   = $this->getLessonExtendDao()->addLesson($argument);
+        $lesson         = array_merge($lesson, $lessonExtend);
+
+        $this->updateCourseCounter($course['id'], array(
+            'lessonNum'  => $this->getLessonDao()->getLessonCountByCourseId($course['id']),
+            'giveCredit' => $this->getLessonDao()->sumLessonGiveCreditByCourseId($course['id'])
+        ));
+
+        $this->getLogService()->info('course', 'add_lesson', "添加课时《{$lesson['title']}》({$lesson['id']})", $lesson);
+        $this->dispatchEvent("course.lesson.create", array('argument' => $argument, 'lesson' => $lesson));
+
+        return $lesson;
+    }
+
 
     protected function _filterCourseFields($fields)
     {
@@ -182,6 +267,34 @@ class CourseServiceImpl extends BaseService implements CourseService
             'number'            =>  0,
             'seq'               =>  0,
             'createdTime'       =>  time()
+        ));
+
+        return $fields;
+    }
+
+    protected function _filterCourseLessonFields($fields)
+    {
+        $fields = ArrayToolkit::filter($fields, array(
+            'courseId'      => 0,
+            'chapterId'     => 0,
+            'free'          => 0,
+            'title'         => '',
+            'summary'       => '',
+            'type'          => 'text',
+            'content'       => '',
+            'media'         => array(),
+            'mediaId'       => 0,
+            'length'        => 0,
+            'testMode'      => 'normal',
+            'testStartTime' => 0,
+            'tags'          =>  '',
+            'mediaId'       =>  0,
+            'mediaSource'   =>  'izhixue',
+            'mediaName'     =>  '',
+            'mediaUri'      =>  '',
+            'materialNum'   =>  0,
+            'quizNum'       =>  0,
+            'status'        =>  'published'
         ));
 
         return $fields;

@@ -8,47 +8,59 @@
 
 namespace Biz\Course\Dao\Impl;
 
-use Biz\Course\Dao\CourseDao;
+use Biz\Course\Dao\CourseChapterDao;
 use Codeages\Biz\Framework\Dao\GeneralDaoImpl;
 
-class CourseDaoImpl extends GeneralDaoImpl implements CourseDao
+class CourseChapterDaoImpl extends GeneralDaoImpl implements CourseChapterDao
 {
-    protected $table = 'course';
+    protected $table = 'course_chapter';
+
+    public function findChaptersByCourseId($courseId)
+    {
+        $sql = "SELECT * FROM {$this->table()} WHERE courseId = ? ORDER BY createdTime ASC";
+
+        return $this->db()->fetchAll($sql, array($courseId));
+    }
+
+    //todo, add to course.delete.event
+    public function deleteChaptersByCourseId($courseId)
+    {
+        $sql    = "DELETE FROM {$this->table} WHERE courseId = ?";
+        $result = $this->db()->executeUpdate($sql, array($courseId));
+
+        return $result;
+    }
 
     public function declares()
     {
         return array(
             'serializes' => array(
-                'goals' => 'delimiter',
-                'audiences' => 'delimiter',
+
             ),
             'orderbys' => array(
-                'lessonNum',
+                'courseId',
+                'number',
+                'seq',
                 'createdTime',
-                'updatedTime',
                 'id',
             ),
-            'timestamps' => array('createdTime', 'updatedTime'),
+            'timestamps' => array('createdTime'),
             'conditions' => array(
                 'id = :id',
-                'updatedTime >= :updatedTime_GE',
-                'status = :status',
                 'type = :type',
                 'title LIKE :titleLike',
                 'createdTime >= :startTime',
                 'createdTime < :endTime',
-                'category LIKE :categoryLike',
-                'tag LIKE :tagLike',
-                'goals LIKE :goalsLike',
                 'keypoints LIKE :keypointsLike',
-                'audiences LIKE :audiencesLike',
-                'smallPicture = :smallPicture',
                 'parentId = :parentId',
                 'parentId > :parentId_GT',
                 'parentId IN ( :parentIds )',
                 'id NOT IN ( :excludeIds )',
                 'id IN ( :courseIds )',
-                'lessonNum > :lessonNumGT',
+                'seq >= :seq_GTE',
+                'seq <= :seq_LTE',
+                'seq < :seq_LT',
+                'seq > :seq_GT',
             ),
             'wave_cahceable_fields' => array(),
         );

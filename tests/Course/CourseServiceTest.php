@@ -8,19 +8,8 @@
 
 namespace Tests;
 
-class InvoiceServiceTest extends IntegrationTestCase
+class CourseServiceTest extends IntegrationTestCase
 {
-    public function testGetCourse()
-    {
-        $mockCourse = $this->mockCourse();
-        $course = $this->getCourseService()->createCourse($mockCourse);
-
-        $result = $this->getCourseService()->getCourse($course['id']);
-
-        $this->assertEquals($mockCourse['title'], $result['title']);
-        $this->assertEquals('published', $result['status']);
-    }
-
     public function testCreateCourse()
     {
         $mockCourse = $this->mockCourse();
@@ -43,15 +32,32 @@ class InvoiceServiceTest extends IntegrationTestCase
         $this->assertEquals($mockCourse['parentId'], $course['parentId']);
         $this->assertEquals($mockCourse['createdTime'], $course['createdTime']);
         $this->assertEquals($mockCourse['updatedTime'], $course['updatedTime']);
+
+        return $course;
     }
 
-    public function testUpdateCourse()
+    /**
+     * @depends testCreateCourse
+     */
+    public function testGetCourse(array $course)
     {
-        $mockCourse = $this->mockCourse();
+        $course = $this->getCourseService()->createCourse($course);
 
+        $result = $this->getCourseService()->getCourse($course['id']);
+
+        $this->assertEquals($course['title'], $result['title']);
+        $this->assertEquals('published', $result['status']);
+    }
+
+
+    /**
+     * @depends testCreateCourse
+     */
+    public function testUpdateCourse(array $course)
+    {
         $mockUpdateCourse = $this->mockUpdateCourse();
 
-        $course = $this->getCourseService()->createCourse($mockCourse);
+        $course = $this->getCourseService()->createCourse($course);
 
         $updateCourse = $this->getCourseService()->updateCourse($course['id'], $mockUpdateCourse);
 
@@ -70,6 +76,20 @@ class InvoiceServiceTest extends IntegrationTestCase
         $this->assertEquals($mockUpdateCourse['goals'], $updateCourse['goals']);
         $this->assertEquals($mockUpdateCourse['audiences'], $updateCourse['audiences']);
         $this->assertEquals($mockUpdateCourse['parentId'], $updateCourse['parentId']);
+    }
+
+    /**
+     * @depends testCreateCourse
+     */
+    public function testDeleteCourse(array $course)
+    {
+        $course = $this->getCourseService()->createCourse($course);
+
+        $this->getCourseService()->deleteCourse($course['id']);
+
+        $deletedCourse = $this->getCourseService()->getCourse($course['id']);
+
+        $this->assertEmpty($deletedCourse);
     }
 
 

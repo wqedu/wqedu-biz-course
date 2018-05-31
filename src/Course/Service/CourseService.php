@@ -15,6 +15,10 @@ interface CourseService
 
     public function createCourse($course);
 
+    public function updateCourse($id, $fields);
+
+    public function deleteCourse($id);
+
     /*
     public function findCoursesByIds($ids);
 
@@ -22,10 +26,22 @@ interface CourseService
 
     public function searchCourseCount($conditions);
 
-
-
-    public function updateCourse($id, $fields);
-
-    public function deleteCourse($id);
     */
+
+    /*
+     * 章节接口
+     */
+    public function getChapter($courseId, $chapterId);
+
+    public function getCourseChapters($courseId);
+
+    public function createChapter($chapter);
+
+    public function updateChapter($courseId, $chapterId, $fields);
+
+    public function deleteChapter($courseId, $chapterId);
+
+    /*
+     * 课时接口
+     */
 }

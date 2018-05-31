@@ -19,14 +19,14 @@ class CourseServiceImpl extends BaseService implements CourseService
     {
         $course  = $this->getCourseDao()->get($id);
 
-        $course = CourseSerialize::unserialize($course);
+        $course = KeypointsSerialize::unserialize($course);
         return ( $course );
     }
 
     public function createCourse($course)
     {
         if (!ArrayToolkit::requireds($course, array('title'))) {
-            throw $this->createServiceException($this->getKernel()->trans('缺少必要字段，创建课程失败！'));
+            throw $this->createServiceException('缺少必要字段，创建课程失败！');
         }
 
         $course                = ArrayToolkit::parts($course, array('title', 'subtitle', 'type', 'lessonNum', 'category', 'tags', 'keypoints', 'smallPicture', 'middlePicture', 'largePicture', 'about', 'goals', 'audiences', 'parentId'));
@@ -35,11 +35,10 @@ class CourseServiceImpl extends BaseService implements CourseService
         //$course['about']       = !empty($course['about']) ? $this->purifyHtml($course['about']) : '';//todo, add htmlhelper
         $course['createdTime'] = time();
         $course['updatedTime'] = time();
-        $course                = $this->getCourseDao()->create(CourseSerialize::serialize($course));
+        $course                = $this->getCourseDao()->create(KeypointsSerialize::serialize($course));
 
         $course = $this->getCourse($course['id']);
 
-        //$this->dispatchEvent("course.create", $course);
         //$this->getLogService()->info('course', 'create', "创建课程《{$course['title']}》(#{$course['id']})");
 
         return $course;
@@ -50,176 +49,98 @@ class CourseServiceImpl extends BaseService implements CourseService
         $course   = $this->getCourseDao()->get($id);
 
         if (empty($course)) {
-            throw $this->createServiceException($this->getKernel()->trans('课程不存在，更新失败！'));
+            throw $this->createServiceException('课程不存在，更新失败！');
         }
         $fields = $this->_filterCourseFields($fields);
 
         //$this->getLogService()->info('course', 'update', "更新课程《{$course['title']}》(#{$course['id']})的信息", $fields);
 
-        $fields        = CourseSerialize::serialize($fields);
+        $fields        = KeypointsSerialize::serialize($fields);
 
         $updatedCourse = $this->getCourseDao()->update($id, $fields);
 
-        return CourseSerialize::unserialize($updatedCourse);
+        return KeypointsSerialize::unserialize($updatedCourse);
     }
-
-    /*
-    public function findCoursesByIds($ids)
-    {
-        $courses = $this->getCourseDao()->findCoursesByIds($ids);
-
-        return ArrayToolkit::index($courses, 'id');
-    }
-
-    public function searchCourses($conditions, $sort, $start, $limit)
-    {
-        $conditions = $this->_prepareCourseConditions($conditions);
-        $orderBy = $this->_prepareCourseOrderBy($sort);
-
-        return $this->getCourseDao()->search($conditions, $orderBy, $start, $limit);
-    }
-
-    public function searchCourseCount($conditions)
-    {
-        $conditions = $this->_prepareCourseConditions($conditions);
-
-        return $this->getCourseDao()->count($conditions);
-    }
-
-
-
-
 
     public function deleteCourse($id)
     {
-        $course  = $this->tryAdminCourse($id, 'admin_course_delete');
-        $lessons = $this->getCourseLessons($course['id']);
+        //todo, delete lessons
+        //$lessons = $this->getCourseLessons($course['id']);
 
-        // Delete course related data
-        $this->getMemberDao()->deleteMembersByCourseId($id);
-        $this->getLessonDao()->deleteLessonsByCourseId($id);
-        $this->getLessonExtendDao()->deleteLessonsByCourseId($id);
-        $this->deleteCrontabs($lessons);
         $this->getChapterDao()->deleteChaptersByCourseId($id);
 
-        $this->getCourseDao()->deleteCourse($id);
+        $this->getCourseDao()->delete($id);
 
-        if ($course["type"] == "live") {
-            $this->getCourseLessonReplayDao()->deleteLessonReplayByCourseId($id);
-        }
-
-        $this->getLogService()->info('course', 'delete', "删除课程《{$course['title']}》(#{$course['id']})");
-
-        $this->dispatchEvent("course.delete", $course);
+        //$this->getLogService()->info('course', 'delete', "删除课程《{$course['title']}》(#{$course['id']})");
 
         return true;
     }
 
-    protected function _prepareCourseConditions($conditions)
+
+
+    /*
+     * chapter api
+     */
+    public function getChapter($courseId, $chapterId)
     {
-        $conditions = array_filter(
-            $conditions,
-            function ($value) {
-                if (0 == $value) {
-                    return true;
-                }
+        $chapter = $this->getChapterDao()->get($chapterId);
 
-                return !empty($value);
-            }
-        );
-
-        if (isset($conditions['date'])) {
-            $dates = array(
-                'yesterday' => array(
-                    strtotime('yesterday'),
-                    strtotime('today'),
-                ),
-                'today' => array(
-                    strtotime('today'),
-                    strtotime('tomorrow'),
-                ),
-                'this_week' => array(
-                    strtotime('Monday this week'),
-                    strtotime('Monday next week'),
-                ),
-                'last_week' => array(
-                    strtotime('Monday last week'),
-                    strtotime('Monday this week'),
-                ),
-                'next_week' => array(
-                    strtotime('Monday next week'),
-                    strtotime('Monday next week', strtotime('Monday next week')),
-                ),
-                'this_month' => array(
-                    strtotime('first day of this month midnight'),
-                    strtotime('first day of next month midnight'),
-                ),
-                'last_month' => array(
-                    strtotime('first day of last month midnight'),
-                    strtotime('first day of this month midnight'),
-                ),
-                'next_month' => array(
-                    strtotime('first day of next month midnight'),
-                    strtotime('first day of next month midnight', strtotime('first day of next month midnight')),
-                ),
-            );
-
-            if (array_key_exists($conditions['date'], $dates)) {
-                $conditions['startTimeGreaterThan'] = $dates[$conditions['date']][0];
-                $conditions['startTimeLessThan'] = $dates[$conditions['date']][1];
-                unset($conditions['date']);
-            }
+        if (empty($chapter) || $chapter['courseId'] != $courseId) {
+            return null;
         }
 
-        if (isset($conditions['creator']) && !empty($conditions['creator'])) {
-            $user = $this->getUserService()->getUserByNickname($conditions['creator']);
-            $conditions['userId'] = $user ? $user['id'] : -1;
-            unset($conditions['creator']);
-        }
-
-        if (isset($conditions['categoryId'])) {
-            $conditions['categoryIds'] = array();
-
-            if (!empty($conditions['categoryId'])) {
-                $childrenIds = $this->getCategoryService()->findCategoryChildrenIds($conditions['categoryId']);
-                $conditions['categoryIds'] = array_merge(array($conditions['categoryId']), $childrenIds);
-            }
-
-            unset($conditions['categoryId']);
-        }
-
-        if (isset($conditions['nickname'])) {
-            $user = $this->getUserService()->getUserByNickname($conditions['nickname']);
-            $conditions['userId'] = $user ? $user['id'] : -1;
-            unset($conditions['nickname']);
-        }
-
-        return $conditions;
+        $chapter = KeypointsSerialize::unserialize($chapter);
+        return $chapter;
     }
 
-    protected function _prepareCourseOrderBy($sort)
+    public function getCourseChapters($courseId)
     {
-        if (is_array($sort)) {
-            $orderBy = $sort;
-        } elseif ('popular' == $sort || 'hitNum' == $sort) {
-            $orderBy = array('hitNum' => 'DESC');
-        } elseif ('recommended' == $sort) {
-            $orderBy = array('recommendedTime' => 'DESC');
-        } elseif ('rating' == $sort) {
-            $orderBy = array('rating' => 'DESC');
-        } elseif ('studentNum' == $sort) {
-            $orderBy = array('studentNum' => 'DESC');
-        } elseif ('recommendedSeq' == $sort) {
-            $orderBy = array('recommendedSeq' => 'ASC', 'recommendedTime' => 'DESC');
-        } elseif ('createdTimeByAsc' == $sort) {
-            $orderBy = array('createdTime' => 'ASC');
-        } else {
-            $orderBy = array('createdTime' => 'DESC');
+        $chapters = $this->getChapterDao()->findChaptersByCourseId($courseId);
+
+        return KeypointsSerialize::unserializes( $chapters );
+    }
+
+    public function createChapter($chapter)
+    {
+
+        if (!in_array($chapter['type'], array('chapter', 'unit', 'lesson'))) {
+            throw $this->createInvalidArgumentException('Invalid Chapter Type');
+        }
+        $chapter = $this->_filterCourseChapterFields($chapter);
+
+        $chapter = $this->getChapterDao()->create( KeypointsSerialize::serialize($chapter) );
+        $chapter = KeypointsSerialize::unserialize($chapter);
+        return $chapter;
+    }
+
+    public function updateChapter($courseId, $chapterId, $fields)
+    {
+        $chapter = $this->getChapterDao()->get($chapterId);
+
+        if (empty($chapter) || $chapter['courseId'] != $courseId) {
+            throw $this->createNotFoundException("Chapter#{$chapterId} Not Found");
         }
 
-        return $orderBy;
+        $fields = ArrayToolkit::parts($fields, array('title', 'number', 'seq', 'parentId'));
+
+        $chapter = $this->getChapterDao()->update($chapterId, $fields);
+
+        return $chapter;
     }
-    */
+
+    public function deleteChapter($courseId, $chapterId)
+    {
+        $deletedChapter = $this->getChapterDao()->get($chapterId);
+
+        if (empty($deletedChapter) || $deletedChapter['courseId'] != $courseId) {
+            throw $this->createNotFoundException("Chapter#{$chapterId} Not Found");
+        }
+
+        $this->getChapterDao()->delete($deletedChapter['id']);
+
+        //$this->getLogService()->info('course', 'delete_chapter', "删除章节(#{$chapterId})", $deletedChapter);
+    }
+
 
     protected function _filterCourseFields($fields)
     {
@@ -239,6 +160,24 @@ class CourseServiceImpl extends BaseService implements CourseService
             'goals'             =>  array(),
             'audiences'         =>  array(),
             'parentId'          =>  0,
+            'createdTime'       =>  time(),
+            'updatedTime'       =>  time(),
+        ));
+
+        return $fields;
+    }
+
+    protected function _filterCourseChapterFields($fields)
+    {
+        $fields = ArrayToolkit::filter($fields, array(
+            'title'             =>  '',
+            'courseId'          =>  '',
+            'type'              =>  'chapter',
+            'keypoints'         =>  array(),
+            'parentId'          =>  0,
+            'number'            =>  0,
+            'seq'               =>  0,
+            'createdTime'       =>  time()
         ));
 
         return $fields;
@@ -266,68 +205,54 @@ class CourseServiceImpl extends BaseService implements CourseService
     }
 }
 
-class CourseSerialize
+
+class KeypointsSerialize
 {
-    public static function serialize(array &$course)
+    public static function serialize(array &$data)
     {
-        if (isset($course['keypoints'])) {
-            if (is_array($course['keypoints']) && !empty($course['keypoints'])) {
-                $course['keypoints'] = serialize($course['keypoints']);
+        if (isset($data['keypoints'])) {
+            if (is_array($data['keypoints']) && !empty($data['keypoints'])) {
+                $keypoints = '';
+                foreach($data['keypoints'] as $key=>$points)
+                {
+                    $keypoints .= '|' . $key . ':' . $points;
+                }
+                $data['keypoints'] = $keypoints . '|';
             } else {
-                $course['keypoints'] = serialize(array());
+                $data['keypoints'] = '';
             }
         }
 
-        if (isset($course['goals'])) {
-            if (is_array($course['goals']) && !empty($course['goals'])) {
-                $course['goals'] = '|'.implode('|', $course['goals']).'|';
-            } else {
-                $course['goals'] = '';
-            }
-        }
-
-        if (isset($course['audiences'])) {
-            if (is_array($course['audiences']) && !empty($course['audiences'])) {
-                $course['audiences'] = '|'.implode('|', $course['audiences']).'|';
-            } else {
-                $course['audiences'] = '';
-            }
-        }
-
-        return $course;
+        return $data;
     }
 
-    public static function unserialize(array $course = null)
+    public static function unserialize(array $data = null)
     {
-        if (empty($course)) {
-            return $course;
+        if (empty($data)) {
+            return $data;
         }
 
-        if (empty($course['keypoints'])) {
-            $course['keypoints'] = array();
+        if (empty($data['keypoints'])) {
+            $data['keypoints'] = array();
         } else {
-            $course['keypoints'] = unserialize($course['keypoints']);
+            $keypoints = explode('|', trim($data['keypoints'], '|'));
+            $newKeypoints = array();
+            foreach($keypoints as $keypoint)
+            {
+                list($key, $point) = explode(':', $keypoint);
+                $newKeypoints[$key] = $point;
+            }
+
+            $data['keypoints'] = $newKeypoints;
         }
 
-        if (empty($course['goals'])) {
-            $course['goals'] = array();
-        } else {
-            $course['goals'] = explode('|', trim($course['goals'], '|'));
-        }
-
-        if (empty($course['audiences'])) {
-            $course['audiences'] = array();
-        } else {
-            $course['audiences'] = explode('|', trim($course['audiences'], '|'));
-        }
-
-        return $course;
+        return $data;
     }
 
-    public static function unserializes(array $courses)
+    public static function unserializes(array $datas)
     {
-        return array_map(function ($course) {
-            return CourseSerialize::unserialize($course);
-        }, $courses);
+        return array_map(function ($data) {
+            return KeypointsSerialize::unserialize($data);
+        }, $datas);
     }
 }

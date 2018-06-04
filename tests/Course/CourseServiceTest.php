@@ -136,6 +136,15 @@ class CourseServiceTest extends IntegrationTestCase
         $this->assertEquals(8, count($items));
     }
 
+    public function testCourseTt()
+    {
+        $course = $this->getCourseService()->getCourseTt('fdfdfdf');
+
+        $error = array('message'=>'课程资源没有找到','code'=>20204);
+
+        $this->assertEquals($error, $course);
+    }
+
 
     protected function mockCourse()
     {

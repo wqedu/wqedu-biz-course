@@ -48,4 +48,6 @@ interface CourseService
     public function getLesson($id);
 
     public function createLesson($lesson);
+
+    public function updateLesson($courseId, $lessonId, $fields);
 }

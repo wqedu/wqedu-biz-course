@@ -8,14 +8,14 @@
 
 namespace Biz\Course\Dao\Impl;
 
-use Biz\Course\Dao\CourseChapterDao;
+use Biz\Course\Dao\CourseLessonDao;
 use Codeages\Biz\Framework\Dao\GeneralDaoImpl;
 
-class CourseChapterDaoImpl extends GeneralDaoImpl implements CourseChapterDao
+class CourseLessonDaoImpl extends GeneralDaoImpl implements CourseLessonDao
 {
-    protected $table = 'course_chapter';
+    protected $table = 'course_lesson';
 
-    public function findChaptersByCourseId($courseId)
+    public function findLessonsByCourseId($courseId)
     {
         $sql = "SELECT * FROM {$this->table()} WHERE courseId = ? ORDER BY createdTime ASC";
 
@@ -23,7 +23,7 @@ class CourseChapterDaoImpl extends GeneralDaoImpl implements CourseChapterDao
     }
 
     //todo, add to course.delete.event
-    public function deleteChaptersByCourseId($courseId)
+    public function deleteLessonsByCourseId($courseId)
     {
         $sql    = "DELETE FROM {$this->table} WHERE courseId = ?";
         $result = $this->db()->executeUpdate($sql, array($courseId));
@@ -39,23 +39,22 @@ class CourseChapterDaoImpl extends GeneralDaoImpl implements CourseChapterDao
             ),
             'orderbys' => array(
                 'courseId',
+                'chapterId',
                 'number',
                 'seq',
                 'createdTime',
                 'id',
             ),
-            'timestamps' => array('createdTime'),
+            'timestamps' => array('createdTime','updatedTime'),
             'conditions' => array(
                 'id = :id',
                 'courseId = :courseId',
+                'chapterId = :chapterId',
                 'type = :type',
                 'title LIKE :titleLike',
                 'createdTime >= :startTime',
                 'createdTime < :endTime',
                 'keypoints LIKE :keypointsLike',
-                'parentId = :parentId',
-                'parentId > :parentId_GT',
-                'parentId IN ( :parentIds )',
                 'id NOT IN ( :excludeIds )',
                 'id IN ( :ids )',
                 'seq >= :seq_GTE',

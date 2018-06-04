@@ -72,10 +72,11 @@ class Course extends Migration
               `length` int(11) unsigned DEFAULT NULL COMMENT '音视频长度',
               `materialNum` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '上传的资料数量',
               `quizNum` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '测验题目数量',
-              `createdTime` int(10) unsigned NOT NULL,
-              `updatedTime` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最后更新时间',
               `testMode` enum('normal','realTime') DEFAULT 'normal' COMMENT '考试模式',
               `testStartTime` int(10) DEFAULT '0' COMMENT '实时考试开始时间',
+              `keypoints` text DEFAULT NULL COMMENT '知识点',
+              `createdTime` int(10) unsigned NOT NULL COMMENT '创建时间',
+              `updatedTime` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最后更新时间',
               PRIMARY KEY (`id`),
               KEY `updatedTime` (`updatedTime`) USING BTREE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

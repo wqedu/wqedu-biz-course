@@ -118,7 +118,7 @@ class CourseServiceImpl extends BaseService implements CourseService
         $chapter = $this->getChapterDao()->get($chapterId);
 
         if (empty($chapter) || $chapter['courseId'] != $courseId) {
-            throw $this->createNotFoundException("Chapter#{$chapterId} Not Found");
+            return false;
         }
 
         $fields = $this->_filterCourseChapterFields($fields);
@@ -148,86 +148,80 @@ class CourseServiceImpl extends BaseService implements CourseService
     /*
      * 课时接口
      */
+
     public function createLesson($lesson)
     {
-        $argument = $lesson;
-        $lesson   = ArrayToolkit::filter($lesson, array(
-            'courseId'      => 0,
-            'chapterId'     => 0,
-            'free'          => 0,
-            'title'         => '',
-            'summary'       => '',
-            'type'          => 'text',
-            'content'       => '',
-            'media'         => array(),
-            'mediaId'       => 0,
-            'length'        => 0,
-            'startTime'     => 0,
-            'giveCredit'    => 0,
-            'requireCredit' => 0,
-            'liveProvider'  => 'none',
-            'copyId'        => 0,
-            'testMode'      => 'normal',
-            'testStartTime' => 0
-        ));
+        $lesson   = $this->_filterCourseLessonFields($lesson);
 
         if (!ArrayToolkit::requireds($lesson, array('courseId', 'title', 'type'))) {
-            throw $this->createServiceException($this->getKernel()->trans('参数缺失，创建课时失败！'));
+            //todo, log
+            return false;
         }
 
         if (empty($lesson['courseId'])) {
-            throw $this->createServiceException($this->getKernel()->trans('添加课时失败，课程ID为空。'));
+            //todo,log
+            return false;
         }
 
-        $course = $this->getCourse($lesson['courseId'], true);
+        $course = $this->getCourse($lesson['courseId']);
 
         if (empty($course)) {
-            throw $this->createServiceException($this->getKernel()->trans('添加课时失败，课程不存在。'));
+            //todo,log
+            return false;
         }
 
-        if (!in_array($lesson['type'], array('text', 'audio', 'video', 'testpaper', 'live', 'ppt', 'document', 'flash', 'open', 'liveOpen'))) {
-            throw $this->createServiceException($this->getKernel()->trans('课时类型不正确，添加失败！'));
-        }
-
-        $this->fillLessonMediaFields($lesson);
-
-
-        if (isset($fields['title'])) {
-            $fields['title'] = $this->purifyHtml($fields['title']);
+        if (!in_array($lesson['type'], array('text', 'audio', 'video', 'testpaper', 'ppt', 'document', 'flash'))) {
+            //todo,log
+            return false;
         }
 
         // 课程处于发布状态时，新增课时，课时默认的状态为“未发布"
-        $lesson['status']      = $course['status'] == 'published' ? 'unpublished' : 'published';
+        $lesson['status']      = $course['status'] == 'published' ? 'published' : 'unpublished';
         $lesson['free']        = empty($lesson['free']) ? 0 : 1;
-        $lesson['number']      = $this->getNextLessonNumber($lesson['courseId']);
-        $lesson['seq']         = $this->getNextCourseItemSeq($lesson['courseId']);
-        $lesson['userId']      = $this->getCurrentUser()->id;
-        $lesson['createdTime'] = time();
 
-        $lastChapter         = $this->getChapterDao()->getLastChapterByCourseId($lesson['courseId']);
-        $lesson['chapterId'] = empty($lastChapter) ? 0 : $lastChapter['id'];
-
-        if ($lesson['type'] == 'live') {
-            $lesson['endTime'] = $lesson['startTime'] + $lesson['length'] * 60;
-        }
-
-        $lesson = $this->getLessonDao()->addLesson(
-            LessonSerialize::serialize($lesson)
+        $lesson = $this->getLessonDao()->create(
+            KeypointsSerialize::serialize($lesson)
         );
 
-        $argument['id'] = $lesson['id'];
-        $lessonExtend   = $this->getLessonExtendDao()->addLesson($argument);
-        $lesson         = array_merge($lesson, $lessonExtend);
+        //$this->getLogService()->info('course', 'add_lesson', "添加课时《{$lesson['title']}》({$lesson['id']})", $lesson);
 
-        $this->updateCourseCounter($course['id'], array(
-            'lessonNum'  => $this->getLessonDao()->getLessonCountByCourseId($course['id']),
-            'giveCredit' => $this->getLessonDao()->sumLessonGiveCreditByCourseId($course['id'])
-        ));
-
-        $this->getLogService()->info('course', 'add_lesson', "添加课时《{$lesson['title']}》({$lesson['id']})", $lesson);
-        $this->dispatchEvent("course.lesson.create", array('argument' => $argument, 'lesson' => $lesson));
-
+        $lesson = KeypointsSerialize::unserialize($lesson);
         return $lesson;
+    }
+
+    public function getLesson($id)
+    {
+        $lesson  = $this->getLessonDao()->get($id);
+
+        $lesson = KeypointsSerialize::unserialize($lesson);
+        return ( $lesson );
+    }
+
+    public function updateLesson($courseId, $lessonId, $fields)
+    {
+        $argument = $fields;
+        $course   = $this->getCourse($courseId);
+
+        $lesson = $this->getLesson($lessonId);
+
+        if (empty($lesson) || $lesson['courseId'] != $courseId) {
+            return false;
+        }
+
+        $fields   = $this->_filterCourseLessonFields($fields);
+
+        if (isset($fields['title'])) {
+            //$fields['title'] = $this->purifyHtml($fields['title']);
+        }
+
+        $updatedLesson = KeypointsSerialize::unserialize(
+            $this->getLessonDao()->update($lessonId, KeypointsSerialize::serialize($fields))
+        );
+
+        //todo, log
+        //$this->getLogService()->info('course', 'update_lesson', "更新课时《{$updatedLesson['title']}》({$updatedLesson['id']})", $updatedLesson);
+
+        return $updatedLesson;
     }
 
 
@@ -277,6 +271,8 @@ class CourseServiceImpl extends BaseService implements CourseService
         $fields = ArrayToolkit::filter($fields, array(
             'courseId'      => 0,
             'chapterId'     => 0,
+            'number'        => 0,
+            'seq'           => 0,
             'free'          => 0,
             'title'         => '',
             'summary'       => '',
@@ -294,7 +290,8 @@ class CourseServiceImpl extends BaseService implements CourseService
             'mediaUri'      =>  '',
             'materialNum'   =>  0,
             'quizNum'       =>  0,
-            'status'        =>  'published'
+            'status'        =>  'published',
+            'keypoints'      => array(),
         ));
 
         return $fields;
@@ -318,7 +315,7 @@ class CourseServiceImpl extends BaseService implements CourseService
 
     protected function getLessonDao()
     {
-        return $this->biz->dao('Course.LessonDao');
+        return $this->biz->dao('Course:CourseLessonDao');
     }
 }
 

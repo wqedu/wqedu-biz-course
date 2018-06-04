@@ -143,6 +143,7 @@ class CourseServiceImpl extends BaseService implements CourseService
         $this->getChapterDao()->delete($deletedChapter['id']);
 
         //$this->getLogService()->info('course', 'delete_chapter', "删除章节(#{$chapterId})", $deletedChapter);
+        return true;
     }
 
     /*
@@ -222,6 +223,58 @@ class CourseServiceImpl extends BaseService implements CourseService
         //$this->getLogService()->info('course', 'update_lesson', "更新课时《{$updatedLesson['title']}》({$updatedLesson['id']})", $updatedLesson);
 
         return $updatedLesson;
+    }
+
+    public function deleteLesson($courseId, $lessonId)
+    {
+        $course = $this->getCourse($courseId);
+
+        if (empty($course)) {
+            return false;
+        }
+
+        $lesson = $this->getLesson($lessonId);
+
+        if (empty($lesson)) {
+            return false;
+        }
+
+        $this->getLessonDao()->delete($lessonId);
+
+        //$this->getLogService()->info('course', 'delete_lesson', "删除课程《{$course['title']}》(#{$course['id']})的课时 {$lesson['title']}");
+
+        return true;
+    }
+
+    /*
+     * 课程元素接口
+     */
+    public function getCourseItems($courseId)
+    {
+        $lessons = KeypointsSerialize::unserializes(
+            $this->getLessonDao()->findLessonsByCourseId($courseId)
+        );
+
+        $chapters = $this->getChapterDao()->findChaptersByCourseId($courseId);
+
+        $items = array();
+
+        foreach ($lessons as $lesson) {
+            $lesson['itemType']              = 'lesson';
+            $items["lesson-{$lesson['id']}"] = $lesson;
+        }
+
+        foreach ($chapters as $chapter) {
+            $chapter['itemType']               = 'chapter';
+            $items["chapter-{$chapter['id']}"] = $chapter;
+        }
+
+        uasort($items, function ($item1, $item2) {
+            return $item1['seq'] > $item2['seq'];
+        }
+
+        );
+        return $items;
     }
 
 

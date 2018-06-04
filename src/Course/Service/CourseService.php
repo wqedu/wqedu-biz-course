@@ -50,4 +50,11 @@ interface CourseService
     public function createLesson($lesson);
 
     public function updateLesson($courseId, $lessonId, $fields);
+
+    public function deleteLesson($courseId, $lessonId);
+
+    /*
+     * 课程所有元素接口
+     */
+    public function getCourseItems($courseId);
 }

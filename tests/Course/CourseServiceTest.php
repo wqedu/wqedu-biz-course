@@ -92,6 +92,50 @@ class CourseServiceTest extends IntegrationTestCase
         $this->assertEmpty($deletedCourse);
     }
 
+    /**
+     * @depends testCreateCourse
+     */
+    public function testGetItems(array $course)
+    {
+        $course = $this->getCourseService()->createCourse($course);
+
+        //one chapter
+        $chapter = $this->mockChapter();
+        $chapter['courseId'] = $course['id'];
+        $chapter = $this->getCourseService()->createChapter($chapter);
+
+        $unit = $this->mockUnit();
+        $unit['courseId'] = $course['id'];
+        $unit['parentId'] = $chapter['id'];
+        $unit = $this->getCourseService()->createChapter($unit);
+
+        $lesson = $this->mockLesson();
+        $lesson['courseId'] = $course['id'];
+        $lesson['chapterId'] = $unit['id'];
+        $lesson = $this->getCourseService()->createLesson($lesson);
+        $lesson = $this->getCourseService()->createLesson($lesson);
+
+        //to chapter
+        $chapter = $this->mockChapter();
+        $chapter['courseId'] = $course['id'];
+        $chapter = $this->getCourseService()->createChapter($chapter);
+
+        $unit = $this->mockUnit();
+        $unit['courseId'] = $course['id'];
+        $unit['parentId'] = $chapter['id'];
+        $unit = $this->getCourseService()->createChapter($unit);
+
+        $lesson = $this->mockLesson();
+        $lesson['courseId'] = $course['id'];
+        $lesson['chapterId'] = $unit['id'];
+        $lesson = $this->getCourseService()->createLesson($lesson);
+        $lesson = $this->getCourseService()->createLesson($lesson);
+
+        $items = $this->getCourseService()->getCourseItems($course['id']);
+
+        $this->assertEquals(8, count($items));
+    }
+
 
     protected function mockCourse()
     {
@@ -134,6 +178,59 @@ class CourseServiceTest extends IntegrationTestCase
             'goals'             =>  array('目标1掌握','目标2数量掌握','掌握要点'),
             'audiences'         =>  array('大专院校','在校学生','大众'),
             'parentId'          =>  1,
+        );
+    }
+
+    protected function mockChapter()
+    {
+        return array(
+            'title'             =>  '第一章',
+            'type'              =>  'chapter',
+            'parentId'          =>  0,
+            'number'            =>  1,
+            'seq'               =>  1,
+            'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
+            'createdTime'       =>  time(),
+        );
+    }
+
+    protected function mockUnit()
+    {
+        return array(
+            'title'             =>  '第一章',
+            'type'              =>  'unit',
+            'parentId'          =>  0,
+            'number'            =>  1,
+            'seq'               =>  2,
+            'keypoints'         =>  array('100001'=>'经济学','100002'=>'管理学'),
+            'createdTime'       =>  time(),
+        );
+    }
+
+    protected function mockLesson()
+    {
+        return array(
+            'title'             =>  '第一个课时的名字',
+            'type'              =>  'text',
+            'number'            =>  2,
+            'seq'               =>  3,
+            'free'              =>  1,
+            'status'            =>  'published',
+            'summary'           =>  '这是第一个课时的概况',
+            'tags'              =>  '数字,技术',
+            'content'           =>  '<p>这一讲的内容第一段</p><p>第二段</p>',
+            'mediaId'           =>  1111,
+            'mediaSource'       =>  'izhixue',
+            'mediaName'         =>  '王老师讲课Node',
+            'mediaUri'          =>  'https://www.qiniu.com/aa.mpv',
+            'length'            =>  '1111',
+            'materialNum'       =>  10,
+            'quizNum'           =>  20,
+            'createdTime'       =>  time(),
+            'updatedTime'       =>  time(),
+            'testMode'          =>  'normal',//normal/realTime,
+            'testStartTime'     =>  time(),
+            'keypoints'         =>  array('100001'=>'经济学1','100002'=>'管理学2')
         );
     }
 

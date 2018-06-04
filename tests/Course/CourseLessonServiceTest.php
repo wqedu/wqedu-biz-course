@@ -121,6 +121,37 @@ class CourseLessonServiceTest extends IntegrationTestCase
         $this->assertEquals($mockUpdateLesson['keypoints'], $updateLesson['keypoints']);
     }
 
+    public function testDeleteChapter()
+    {
+        //course
+        $mockCourse = $this->mockCourse();
+        $course = $this->getCourseService()->createCourse($mockCourse);
+
+        //chapter
+        $mockChapter = $this->mockChapter();
+        $mockChapter['courseId'] = $course['id'];
+        $chapter = $this->getCourseService()->createChapter($mockChapter);
+
+        //unit
+        $mockUnit = $this->mockUnit();
+        $mockUnit['courseId'] = $chapter['courseId'];
+        $mockUnit['parentId'] = $chapter['id'];
+        $unit = $this->getCourseService()->createChapter($mockUnit);
+
+        $mockLesson = $this->mockLesson();
+        $mockLesson['courseId'] = $course['id'];
+        $mockLesson['chapterId'] = $unit['id'];
+
+        $lesson = $this->getCourseService()->createLesson($mockLesson);
+
+        $this->getCourseService()->deleteLesson($lesson['courseId'], $lesson['id']);
+
+        $deletedLesson = $this->getCourseService()->getLesson($lesson['courseId'],$lesson['id']);
+
+        $this->assertEmpty($deletedLesson);
+
+    }
+
     protected function mockCourse()
     {
         return array(

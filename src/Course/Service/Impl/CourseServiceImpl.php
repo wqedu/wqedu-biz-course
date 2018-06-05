@@ -239,9 +239,10 @@ class CourseServiceImpl extends BaseService implements CourseService
             );
 
             //$this->getLogService()->info('course', 'add_lesson', "添加课时《{$lesson['title']}》({$lesson['id']})", $lesson);
-
-            $lesson = KeypointsSerialize::unserialize($lesson);
-            return $lesson;
+            return array(
+                'code' => 0,
+                'data' => KeypointsSerialize::unserialize($lesson)
+            );
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
@@ -251,72 +252,79 @@ class CourseServiceImpl extends BaseService implements CourseService
     public function getLesson($id)
     {
         try {
+            $lesson  = $this->getLessonDao()->get($id);
 
+            if(empty($lesson))
+                throw new \Exception('Lesson Resource Not Found', 20224);
+
+            return array(
+                'code' => 0,
+                'data' => KeypointsSerialize::unserialize($lesson)
+            );
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
-        $lesson  = $this->getLessonDao()->get($id);
 
-        $lesson = KeypointsSerialize::unserialize($lesson);
-        return ( $lesson );
     }
 
     public function updateLesson($courseId, $lessonId, $fields)
     {
         try {
+            $argument = $fields;
+            $course   = $this->getCourseDao()->get($courseId);
+            if(empty($course))
+                throw new \Exception('Course Resource Not Found', 20204);
+
+            $lesson = $this->getLessonDao()->get($lessonId);
+            if (empty($lesson) || $lesson['courseId'] != $courseId)
+                throw new \Exception('Lesson Resource Not Found', 20224);
+
+            $fields   = $this->_filterCourseLessonFields($fields);
+            if (isset($fields['title'])) {
+                //$fields['title'] = $this->purifyHtml($fields['title']);
+            }
+
+            $updatedLesson = KeypointsSerialize::unserialize(
+                $this->getLessonDao()->update($lessonId, KeypointsSerialize::serialize($fields))
+            );
+
+            //todo, log
+            //$this->getLogService()->info('course', 'update_lesson', "更新课时《{$updatedLesson['title']}》({$updatedLesson['id']})", $updatedLesson);
+
+            return array(
+                'code' => 0,
+                'data' => $updatedLesson
+            );
 
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
-        $argument = $fields;
-        $course   = $this->getCourse($courseId);
-
-        $lesson = $this->getLesson($lessonId);
-
-        if (empty($lesson) || $lesson['courseId'] != $courseId) {
-            return false;
-        }
-
-        $fields   = $this->_filterCourseLessonFields($fields);
-
-        if (isset($fields['title'])) {
-            //$fields['title'] = $this->purifyHtml($fields['title']);
-        }
-
-        $updatedLesson = KeypointsSerialize::unserialize(
-            $this->getLessonDao()->update($lessonId, KeypointsSerialize::serialize($fields))
-        );
-
-        //todo, log
-        //$this->getLogService()->info('course', 'update_lesson', "更新课时《{$updatedLesson['title']}》({$updatedLesson['id']})", $updatedLesson);
-
-        return $updatedLesson;
     }
 
     public function deleteLesson($courseId, $lessonId)
     {
         try {
+            $course = $this->getCourse($courseId);
+            if(empty($course))
+                throw new \Exception('Course Resource Not Found', 20204);
+
+            $lesson = $this->getLesson($lessonId);
+            if (empty($lesson) || $lesson['courseId'] != $courseId)
+                throw new \Exception('Lesson Resource Not Found', 20224);
+
+            $this->getLessonDao()->delete($lessonId);
+
+            //todo,log
+            //$this->getLogService()->info('course', 'delete_lesson', "删除课程《{$course['title']}》(#{$course['id']})的课时 {$lesson['title']}");
+
+            return array(
+                'code' => 0,
+                'data' => true
+            );
 
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
-        $course = $this->getCourse($courseId);
-
-        if (empty($course)) {
-            return false;
-        }
-
-        $lesson = $this->getLesson($lessonId);
-
-        if (empty($lesson)) {
-            return false;
-        }
-
-        $this->getLessonDao()->delete($lessonId);
-
-        //$this->getLogService()->info('course', 'delete_lesson', "删除课程《{$course['title']}》(#{$course['id']})的课时 {$lesson['title']}");
-
-        return true;
     }
 
     /*
@@ -325,34 +333,44 @@ class CourseServiceImpl extends BaseService implements CourseService
     public function getCourseItems($courseId)
     {
         try {
+            $course = $this->getCourse($courseId);
+            if(empty($course))
+                throw new \Exception('Course Resource Not Found', 20204);
+
+            $lessons = KeypointsSerialize::unserializes(
+                $this->getLessonDao()->findLessonsByCourseId($courseId)
+            );
+
+            $chapters = KeypointsSerialize::unserializes(
+                $this->getChapterDao()->findChaptersByCourseId($courseId)
+            );
+
+            $items = array();
+
+            foreach ($lessons as $lesson) {
+                $lesson['itemType']              = 'lesson';
+                $items["lesson-{$lesson['id']}"] = $lesson;
+            }
+            foreach ($chapters as $chapter) {
+                $chapter['itemType']               = 'chapter';
+                $items["chapter-{$chapter['id']}"] = $chapter;
+            }
+
+            uasort(
+                $items,
+                function ($item1, $item2) {
+                    return $item1['seq'] > $item2['seq'];
+                }
+            );
+
+            return array(
+                'code' => 0,
+                'data' => $items
+            );
 
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
-        $lessons = KeypointsSerialize::unserializes(
-            $this->getLessonDao()->findLessonsByCourseId($courseId)
-        );
-
-        $chapters = $this->getChapterDao()->findChaptersByCourseId($courseId);
-
-        $items = array();
-
-        foreach ($lessons as $lesson) {
-            $lesson['itemType']              = 'lesson';
-            $items["lesson-{$lesson['id']}"] = $lesson;
-        }
-
-        foreach ($chapters as $chapter) {
-            $chapter['itemType']               = 'chapter';
-            $items["chapter-{$chapter['id']}"] = $chapter;
-        }
-
-        uasort($items, function ($item1, $item2) {
-            return $item1['seq'] > $item2['seq'];
-        }
-
-        );
-        return $items;
     }
 
     protected function _filterSystemException($code, $message)

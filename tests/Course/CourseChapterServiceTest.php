@@ -13,11 +13,24 @@ class CourseChapterServiceTest extends IntegrationTestCase
     public function testCreateChapter()
     {
         $mockCourse = $this->mockCourse();
-        $course = $this->getCourseService()->createCourse($mockCourse);
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
 
         $mockChapter = $this->mockChapter();
         $mockChapter['courseId'] = $course['id'];
-        $chapter = $this->getCourseService()->createChapter($mockChapter);
+        $getChapter = $this->getCourseService()->createChapter($mockChapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
+
 
         $this->assertEquals($mockChapter['title'], $chapter['title']);
         $this->assertEquals($mockChapter['type'], $chapter['type']);
@@ -30,8 +43,13 @@ class CourseChapterServiceTest extends IntegrationTestCase
         $mockUnit = $this->mockUnit();
         $mockUnit['courseId'] = $chapter['courseId'];
         $mockUnit['parentId'] = $chapter['id'];
-
-        $unit = $this->getCourseService()->createChapter($mockUnit);
+        $getUnit = $this->getCourseService()->createChapter($mockUnit);
+        if($getUnit['code']>0)
+        {
+            $this->expectOutputString($getUnit['message']);
+            return ;
+        }
+        $unit = $getUnit['data'];
 
         $this->assertEquals($mockUnit['title'], $unit['title']);
         $this->assertEquals($mockUnit['type'], $unit['type']);
@@ -44,29 +62,61 @@ class CourseChapterServiceTest extends IntegrationTestCase
         return $chapter;
     }
 
-    /**
-     * @depends testCreateChapter
-     */
-
-    public function testGetChapter(array $chapter)
+    public function testGetChapter()
     {
-        $chapter = $this->getCourseService()->createChapter($chapter);
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
 
-        $result = $this->getCourseService()->getChapter($chapter['courseId'],$chapter['id']);
+        $mockChapter = $this->mockChapter();
+        $mockChapter['courseId'] = $course['id'];
+        $getChapter = $this->getCourseService()->createChapter($mockChapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
 
-        $this->assertEquals($chapter['title'], $result['title']);
+        $this->assertEquals($mockChapter['title'], $chapter['title']);
     }
 
-    /**
-     * @depends testCreateChapter
-     */
-    public function testUpdateChapter(array $chapter)
+
+    public function testUpdateChapter()
     {
         $mockUpdateChapter = $this->mockUpdateChapter();
 
-        $chapter = $this->getCourseService()->createChapter($chapter);
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
 
-        $updateChapter = $this->getCourseService()->updateChapter($chapter['courseId'], $chapter['id'], $mockUpdateChapter);
+        $mockChapter = $this->mockChapter();
+        $mockChapter['courseId'] = $course['id'];
+        $getChapter = $this->getCourseService()->createChapter($mockChapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
+
+        $getUpdateChapter = $this->getCourseService()->updateChapter($chapter['courseId'], $chapter['id'], $mockUpdateChapter);
+        if($getUpdateChapter['code']>0)
+        {
+            $this->expectOutputString($getUpdateChapter['message']);
+            return ;
+        }
+        $updateChapter = $getUpdateChapter['data'];
 
         $this->assertEquals($mockUpdateChapter['title'], $updateChapter['title']);
         $this->assertEquals($mockUpdateChapter['type'], $updateChapter['type']);
@@ -76,16 +126,35 @@ class CourseChapterServiceTest extends IntegrationTestCase
         $this->assertEquals($mockUpdateChapter['keypoints'], $updateChapter['keypoints']);
     }
 
-    /**
-     * @depends testCreateChapter
-     */
-    public function testDeleteChapter(array $chapter)
+
+    public function testDeleteChapter()
     {
-        $chapter = $this->getCourseService()->createChapter($chapter);
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
+
+        $mockChapter = $this->mockChapter();
+        $mockChapter['courseId'] = $course['id'];
+        $getChapter = $this->getCourseService()->createChapter($mockChapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
 
         $this->getCourseService()->deleteChapter($chapter['courseId'], $chapter['id']);
 
-        $deletedChapter = $this->getCourseService()->getChapter($chapter['courseId'],$chapter['id']);
+        $getDeletedChapter = $this->getCourseService()->getChapter($chapter['courseId'],$chapter['id']);
+        if($getDeletedChapter['code']==0)
+            $deletedChapter = $getDeletedChapter['data'];
+        else
+            $deletedChapter = array();
 
         $this->assertEmpty($deletedChapter);
     }
@@ -93,21 +162,48 @@ class CourseChapterServiceTest extends IntegrationTestCase
     public function testGetCourseChapters()
     {
         $mockCourse = $this->mockCourse();
-        $course = $this->getCourseService()->createCourse($mockCourse);
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
 
-        $mockChapter = $this->mockChapter();
-        $mockChapter['courseId'] = $course['id'];
-        $chapter = $this->getCourseService()->createChapter($mockChapter);
+        //one chapter
+        $chapter = $this->mockChapter();
+        $chapter['courseId'] = $course['id'];
+        $getChapter = $this->getCourseService()->createChapter($chapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
 
-        $mockUnit = $this->mockUnit();
-        $mockUnit['courseId'] = $course['id'];
-        $mockUnit['parentId'] = $chapter['id'];
-        $unit = $this->getCourseService()->createChapter($mockUnit);
+        $unit = $this->mockUnit();
+        $unit['courseId'] = $course['id'];
+        $unit['parentId'] = $chapter['id'];
+        $getUnit = $this->getCourseService()->createChapter($unit);
+        if($getUnit['code']>0)
+        {
+            $this->expectOutputString($getUnit['message']);
+            return ;
+        }
+        $unit = $getUnit['data'];
 
-        $chapters = $this->getCourseService()->getCourseChapters($course['id']);
-
-        $this->assertEquals($chapters[0], $chapter);
-        $this->assertEquals($chapters[1], $unit);
+        $getChapters = $this->getCourseService()->getCourseChapters($course['id']);
+        if($getChapters['code']==0)
+        {
+            $chapters = $getChapters['data'];
+            $this->assertEquals($chapters[0], $chapter);
+            $this->assertEquals($chapters[1], $unit);
+        }
+        else
+        {
+            $this->expectOutputString($getChapters['message']);
+            return ;
+        }
     }
 
     protected function mockCourse()

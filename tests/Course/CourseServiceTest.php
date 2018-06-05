@@ -14,137 +14,200 @@ class CourseServiceTest extends IntegrationTestCase
     {
         $mockCourse = $this->mockCourse();
 
-        $course = $this->getCourseService()->createCourse($mockCourse);
-        $this->assertEquals($mockCourse['title'], $course['title']);
-        $this->assertEquals($mockCourse['subtitle'], $course['subtitle']);
-        $this->assertEquals($mockCourse['status'], $course['status']);
-        $this->assertEquals($mockCourse['type'], $course['type']);
-        $this->assertEquals($mockCourse['lessonNum'], $course['lessonNum']);
-        $this->assertEquals($mockCourse['category'], $course['category']);
-        $this->assertEquals($mockCourse['tags'], $course['tags']);
-        $this->assertEquals($mockCourse['keypoints'], $course['keypoints']);
-        $this->assertEquals($mockCourse['smallPicture'], $course['smallPicture']);
-        $this->assertEquals($mockCourse['middlePicture'], $course['middlePicture']);
-        $this->assertEquals($mockCourse['largePicture'], $course['largePicture']);
-        $this->assertEquals($mockCourse['about'], $course['about']);
-        $this->assertEquals($mockCourse['goals'], $course['goals']);
-        $this->assertEquals($mockCourse['audiences'], $course['audiences']);
-        $this->assertEquals($mockCourse['parentId'], $course['parentId']);
-        $this->assertEquals($mockCourse['createdTime'], $course['createdTime']);
-        $this->assertEquals($mockCourse['updatedTime'], $course['updatedTime']);
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']==0)
+        {
+            $course = $getCourse['data'];
+            $this->assertEquals($mockCourse['title'], $course['title']);
+            $this->assertEquals($mockCourse['subtitle'], $course['subtitle']);
+            $this->assertEquals($mockCourse['status'], $course['status']);
+            $this->assertEquals($mockCourse['type'], $course['type']);
+            $this->assertEquals($mockCourse['lessonNum'], $course['lessonNum']);
+            $this->assertEquals($mockCourse['category'], $course['category']);
+            $this->assertEquals($mockCourse['tags'], $course['tags']);
+            $this->assertEquals($mockCourse['keypoints'], $course['keypoints']);
+            $this->assertEquals($mockCourse['smallPicture'], $course['smallPicture']);
+            $this->assertEquals($mockCourse['middlePicture'], $course['middlePicture']);
+            $this->assertEquals($mockCourse['largePicture'], $course['largePicture']);
+            $this->assertEquals($mockCourse['about'], $course['about']);
+            $this->assertEquals($mockCourse['goals'], $course['goals']);
+            $this->assertEquals($mockCourse['audiences'], $course['audiences']);
+            $this->assertEquals($mockCourse['parentId'], $course['parentId']);
+            $this->assertEquals($mockCourse['createdTime'], $course['createdTime']);
+            $this->assertEquals($mockCourse['updatedTime'], $course['updatedTime']);
 
-        return $course;
+            return $course;
+        }
+        else
+        {
+            $this->expectOutputString($getCourse['message']);
+            $this->assertEquals(true, $getCourse['code']>0);
+            return array();
+        }
     }
 
-    /**
-     * @depends testCreateCourse
-     */
-    public function testGetCourse(array $course)
+    public function testGetCourse()
     {
-        $course = $this->getCourseService()->createCourse($course);
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
 
-        $result = $this->getCourseService()->getCourse($course['id']);
-
-        $this->assertEquals($course['title'], $result['title']);
-        $this->assertEquals('published', $result['status']);
+        if($getCourse['code']==0)
+        {
+            $course = $getCourse['data'];
+            $this->assertEquals($mockCourse['title'], $course['title']);
+            $this->assertEquals('published', $course['status']);
+        }
+        else
+        {
+            $this->expectOutputString($getCourse['message']);
+            $this->assertEquals(true, $getCourse['code']>0);
+            return array();
+        }
     }
 
 
-    /**
-     * @depends testCreateCourse
-     */
-    public function testUpdateCourse(array $course)
+    public function testUpdateCourse()
     {
+        $mockCourse = $this->mockCourse();
         $mockUpdateCourse = $this->mockUpdateCourse();
 
-        $course = $this->getCourseService()->createCourse($course);
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']==0)
+        {
+            $course = $getCourse['data'];
+            $getUpdateCourse = $this->getCourseService()->updateCourse($course['id'], $mockUpdateCourse);
+            if($getUpdateCourse['code']==0)
+            {
+                $updateCourse = $getUpdateCourse['data'];
+                $this->assertEquals($mockUpdateCourse['title'], $updateCourse['title']);
+                $this->assertEquals($mockUpdateCourse['subtitle'], $updateCourse['subtitle']);
+                $this->assertEquals($mockUpdateCourse['status'], $updateCourse['status']);
+                $this->assertEquals($mockUpdateCourse['type'], $updateCourse['type']);
+                $this->assertEquals($mockUpdateCourse['lessonNum'], $updateCourse['lessonNum']);
+                $this->assertEquals($mockUpdateCourse['category'], $updateCourse['category']);
+                $this->assertEquals($mockUpdateCourse['tags'], $updateCourse['tags']);
+                $this->assertEquals($mockUpdateCourse['keypoints'], $updateCourse['keypoints']);
+                $this->assertEquals($mockUpdateCourse['smallPicture'], $updateCourse['smallPicture']);
+                $this->assertEquals($mockUpdateCourse['middlePicture'], $updateCourse['middlePicture']);
+                $this->assertEquals($mockUpdateCourse['largePicture'], $updateCourse['largePicture']);
+                $this->assertEquals($mockUpdateCourse['about'], $updateCourse['about']);
+                $this->assertEquals($mockUpdateCourse['goals'], $updateCourse['goals']);
+                $this->assertEquals($mockUpdateCourse['audiences'], $updateCourse['audiences']);
+                $this->assertEquals($mockUpdateCourse['parentId'], $updateCourse['parentId']);
+            }
+            else
+            {
+                $this->expectOutputString($getUpdateCourse['message']);
+                $this->assertEquals(true, $getUpdateCourse['code']>0);
+                return array();
+            }
 
-        $updateCourse = $this->getCourseService()->updateCourse($course['id'], $mockUpdateCourse);
-
-        $this->assertEquals($mockUpdateCourse['title'], $updateCourse['title']);
-        $this->assertEquals($mockUpdateCourse['subtitle'], $updateCourse['subtitle']);
-        $this->assertEquals($mockUpdateCourse['status'], $updateCourse['status']);
-        $this->assertEquals($mockUpdateCourse['type'], $updateCourse['type']);
-        $this->assertEquals($mockUpdateCourse['lessonNum'], $updateCourse['lessonNum']);
-        $this->assertEquals($mockUpdateCourse['category'], $updateCourse['category']);
-        $this->assertEquals($mockUpdateCourse['tags'], $updateCourse['tags']);
-        $this->assertEquals($mockUpdateCourse['keypoints'], $updateCourse['keypoints']);
-        $this->assertEquals($mockUpdateCourse['smallPicture'], $updateCourse['smallPicture']);
-        $this->assertEquals($mockUpdateCourse['middlePicture'], $updateCourse['middlePicture']);
-        $this->assertEquals($mockUpdateCourse['largePicture'], $updateCourse['largePicture']);
-        $this->assertEquals($mockUpdateCourse['about'], $updateCourse['about']);
-        $this->assertEquals($mockUpdateCourse['goals'], $updateCourse['goals']);
-        $this->assertEquals($mockUpdateCourse['audiences'], $updateCourse['audiences']);
-        $this->assertEquals($mockUpdateCourse['parentId'], $updateCourse['parentId']);
+        }
+        else
+        {
+            $this->expectOutputString($getCourse['message']);
+            $this->assertEquals(true, $getCourse['code']>0);
+            return array();
+        }
     }
 
-    /**
-     * @depends testCreateCourse
-     */
-    public function testDeleteCourse(array $course)
+    public function testDeleteCourse()
     {
-        $course = $this->getCourseService()->createCourse($course);
-
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+            return ;
+        $course = $getCourse['data'];
         $this->getCourseService()->deleteCourse($course['id']);
 
-        $deletedCourse = $this->getCourseService()->getCourse($course['id']);
+        $getDeletedCourse = $this->getCourseService()->getCourse($course['id']);
+        if($getDeletedCourse['code']==0)
+            $deletedCourse = $getDeletedCourse['data'];
+        else
+            $deletedCourse = array();
 
         $this->assertEmpty($deletedCourse);
     }
 
-    /**
-     * @depends testCreateCourse
-     */
-    public function testGetItems(array $course)
+    public function testGetItems()
     {
-        $course = $this->getCourseService()->createCourse($course);
+        $mockCourse = $this->mockCourse();
+        $getCourse = $this->getCourseService()->createCourse($mockCourse);
+        if($getCourse['code']>0)
+        {
+            $this->expectOutputString($getCourse['message']);
+            return ;
+        }
+        $course = $getCourse['data'];
 
         //one chapter
         $chapter = $this->mockChapter();
         $chapter['courseId'] = $course['id'];
-        $chapter = $this->getCourseService()->createChapter($chapter);
+        $getChapter = $this->getCourseService()->createChapter($chapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
 
         $unit = $this->mockUnit();
         $unit['courseId'] = $course['id'];
         $unit['parentId'] = $chapter['id'];
-        $unit = $this->getCourseService()->createChapter($unit);
+        $getUnit = $this->getCourseService()->createChapter($unit);
+        if($getUnit['code']>0)
+        {
+            $this->expectOutputString($getUnit['message']);
+            return ;
+        }
+        $unit = $getUnit['data'];
 
         $lesson = $this->mockLesson();
         $lesson['courseId'] = $course['id'];
         $lesson['chapterId'] = $unit['id'];
-        $lesson = $this->getCourseService()->createLesson($lesson);
-        $lesson = $this->getCourseService()->createLesson($lesson);
+        $this->getCourseService()->createLesson($lesson);
+        $this->getCourseService()->createLesson($lesson);
 
         //to chapter
         $chapter = $this->mockChapter();
         $chapter['courseId'] = $course['id'];
-        $chapter = $this->getCourseService()->createChapter($chapter);
+        $getChapter = $this->getCourseService()->createChapter($chapter);
+        if($getChapter['code']>0)
+        {
+            $this->expectOutputString($getChapter['message']);
+            return ;
+        }
+        $chapter = $getChapter['data'];
 
         $unit = $this->mockUnit();
         $unit['courseId'] = $course['id'];
         $unit['parentId'] = $chapter['id'];
-        $unit = $this->getCourseService()->createChapter($unit);
+        $getUnit = $this->getCourseService()->createChapter($unit);
+        if($getUnit['code']>0)
+        {
+            $this->expectOutputString($getUnit['message']);
+            return ;
+        }
+        $unit = $getUnit['data'];
 
         $lesson = $this->mockLesson();
         $lesson['courseId'] = $course['id'];
         $lesson['chapterId'] = $unit['id'];
-        $lesson = $this->getCourseService()->createLesson($lesson);
-        $lesson = $this->getCourseService()->createLesson($lesson);
+        $this->getCourseService()->createLesson($lesson);
+        $this->getCourseService()->createLesson($lesson);
 
-        $items = $this->getCourseService()->getCourseItems($course['id']);
+        $getItems = $this->getCourseService()->getCourseItems($course['id']);
+        if($getItems['code']==0)
+        {
+            $items = $getItems['data'];
+            $this->assertEquals(8, count($items));
+        }
+        else
+        {
+            $this->expectOutputString($getItems['message']);
+        }
 
-        $this->assertEquals(8, count($items));
     }
-
-    public function testCourseTt()
-    {
-        $course = $this->getCourseService()->getCourseTt('fdfdfdf');
-
-        $error = array('message'=>'课程资源没有找到','code'=>20204);
-
-        $this->assertEquals($error, $course);
-    }
-
 
     protected function mockCourse()
     {

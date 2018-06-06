@@ -15,7 +15,7 @@ use Wqedu\Common\ArrayToolkit;
 class CourseServiceImpl extends BaseService implements CourseService
 {
 
-    public function getCourseTt($id)
+    public function getCourse($id)
     {
         try{
             $course  = $this->getCourseDao()->get($id);
@@ -30,14 +30,6 @@ class CourseServiceImpl extends BaseService implements CourseService
         } catch (\Exception $e) {
             return $this->_filterSystemException($e->getCode(), $e->getMessage());
         }
-    }
-
-    public function getCourse($id)
-    {
-        $course  = $this->getCourseDao()->get($id);
-
-        $course = KeypointsSerialize::unserialize($course);
-        return ( $course );
     }
 
     public function createCourse($course)

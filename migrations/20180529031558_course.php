@@ -31,6 +31,7 @@ class Course extends Migration
               `audiences` text COMMENT '适用人群',
               `parentId` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT '课程的父Id',
               `status` enum('draft','published','closed') NOT NULL DEFAULT 'draft' COMMENT '课程状态',
+              `url` varchar(255) DEFAULT NULL COMMENT '课程地址',
               `createdTime` int(10) unsigned NOT NULL COMMENT '创建时间',
               `updatedTime` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最后更新时间',
               PRIMARY KEY (`id`),

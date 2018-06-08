@@ -477,6 +477,7 @@ class CourseServiceImpl extends BaseService implements CourseService
             'audiences'         =>  array(),
             'parentId'          =>  0,
             'status'            =>  'published',
+            'url'               =>  '',
             'createdTime'       =>  time(),
             'updatedTime'       =>  time(),
 

@@ -102,17 +102,37 @@ class CourseServiceImpl extends BaseService implements CourseService
 
     public function searchCourseCount($conditions)
     {
-        $conditions = $this->_prepareCourseConditions($conditions);
+        try {
+            $conditions = $this->_prepareCourseConditions($conditions);
 
-        return $this->getCourseDao()->count($conditions);
+            $count = $this->getCourseDao()->count($conditions);
+
+            return array(
+                'code'  =>  0,
+                'data'  =>  array('totalCount' => $count)
+            );
+
+        } catch (\Exception $e) {
+            return $this->_filterSystemException($e->getCode(), $e->getMessage());
+        }
+
     }
 
     public function searchCourses($conditions, $sort, $start, $limit)
     {
-        $conditions = $this->_prepareCourseConditions($conditions);
-        $orderBy = $this->_prepareCourseOrderBy($sort);
+        try{
+            $conditions = $this->_prepareCourseConditions($conditions);
+            $orderBy = $this->_prepareCourseOrderBy($sort);
 
-        return $this->getCourseDao()->search($conditions, $orderBy, $start, $limit);
+            $list = $this->getCourseDao()->search($conditions, $orderBy, $start, $limit);
+            return array(
+                'code'  =>  0,
+                'data'  =>  array('list' => $list)
+            );
+        } catch (\Exception $e)
+        {
+            return $this->_filterSystemException($e->getCode(), $e->getMessage());
+        }
     }
 
     /*

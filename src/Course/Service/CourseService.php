@@ -19,10 +19,12 @@ interface CourseService
 
     public function deleteCourse($id);
 
-    /*
-    public function findCoursesByIds($ids);
+    public function searchCourseCount($conditions);
 
     public function searchCourses($conditions, $sort, $start, $limit);
+
+    /*
+    public function findCoursesByIds($ids);
 
     public function searchCourseCount($conditions);
 

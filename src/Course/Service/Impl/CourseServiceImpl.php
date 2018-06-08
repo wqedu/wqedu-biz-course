@@ -100,6 +100,21 @@ class CourseServiceImpl extends BaseService implements CourseService
         }
     }
 
+    public function searchCourseCount($conditions)
+    {
+        $conditions = $this->_prepareCourseConditions($conditions);
+
+        return $this->getCourseDao()->count($conditions);
+    }
+
+    public function searchCourses($conditions, $sort, $start, $limit)
+    {
+        $conditions = $this->_prepareCourseConditions($conditions);
+        $orderBy = $this->_prepareCourseOrderBy($sort);
+
+        return $this->getCourseDao()->search($conditions, $orderBy, $start, $limit);
+    }
+
     /*
      * chapter api
      */
@@ -376,6 +391,9 @@ class CourseServiceImpl extends BaseService implements CourseService
         return array('code'=>$code, 'message'=>$message);
     }
 
+    /*
+     * course
+     */
 
     protected function _filterCourseFields($fields)
     {
@@ -404,6 +422,39 @@ class CourseServiceImpl extends BaseService implements CourseService
 
         return $fields;
     }
+
+    protected function _prepareCourseConditions($conditions)
+    {
+        $conditions = array_filter(
+            $conditions,
+            function ($value) {
+                if (0 == $value) {
+                    return true;
+                }
+
+                return !empty($value);
+            }
+        );
+
+        return $conditions;
+    }
+
+    protected function _prepareCourseOrderBy($sort)
+    {
+        if (is_array($sort)) {
+            $orderBy = $sort;
+        } elseif ('createdTimeByAsc' == $sort) {
+            $orderBy = array('createdTime' => 'ASC');
+        } else {
+            $orderBy = array('createdTime' => 'DESC');
+        }
+
+        return $orderBy;
+    }
+
+    /*
+     * chapter
+     */
 
     protected function _filterCourseChapterFields($fields)
     {

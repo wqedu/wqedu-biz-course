@@ -43,6 +43,8 @@ interface CourseService
 
     public function deleteChapter($courseId, $chapterId);
 
+    public function deleteCourseChapters($courseId);
+
     /*
      * 课时接口
      */
@@ -54,6 +56,8 @@ interface CourseService
     public function updateLesson($courseId, $lessonId, $fields);
 
     public function deleteLesson($courseId, $lessonId);
+
+    public function deleteCourseLessons($courseId);
 
     /*
      * 课程所有元素接口

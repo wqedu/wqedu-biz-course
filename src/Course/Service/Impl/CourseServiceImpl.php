@@ -236,6 +236,26 @@ class CourseServiceImpl extends BaseService implements CourseService
         }
     }
 
+    public function deleteCourseChapters($id)
+    {
+        try {
+            $course   = $this->getCourseDao()->get($id);
+            if(empty($course))
+                throw new \Exception('Course Resource Not Found', 20204);
+
+            $this->getChapterDao()->deleteChaptersByCourseId($id);
+
+            //$this->getLogService()->info('course', 'delete', "删除课程全部章节《{$course['title']}》(#{$course['id']})");
+            return array(
+                'code'  =>  0,
+                'data'  =>  true
+            );
+
+        } catch (\Exception $e) {
+            return $this->_filterSystemException($e->getCode(), $e->getMessage());
+        }
+    }
+
     /*
      * 课时接口
      */
@@ -347,6 +367,28 @@ class CourseServiceImpl extends BaseService implements CourseService
             return array(
                 'code' => 0,
                 'data' => true
+            );
+
+        } catch (\Exception $e) {
+            return $this->_filterSystemException($e->getCode(), $e->getMessage());
+        }
+    }
+
+    public function deleteCourseLessons($id)
+    {
+        try {
+            $course   = $this->getCourseDao()->get($id);
+            if(empty($course))
+                throw new \Exception('Course Resource Not Found', 20204);
+
+            $this->getLessonDao()->deleteLessonsByCourseId($id);
+
+            $this->updateCourse($id, array('lessonNum'=>0));
+
+            //$this->getLogService()->info('course', 'delete', "删除课程全部课时《{$course['title']}》(#{$course['id']})");
+            return array(
+                'code'  =>  0,
+                'data'  =>  true
             );
 
         } catch (\Exception $e) {

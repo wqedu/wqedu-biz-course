@@ -382,8 +382,9 @@ class CourseServiceImpl extends BaseService implements CourseService
         $fields = ArrayToolkit::filter($fields, array(
             'title'             =>  '',
             'subtitle'          =>  '',
-            'status'            =>  'published',
             'type'              =>  'normal',
+            'price'             =>  0.00,
+            'serializeMode'     =>  'none',
             'lessonNum'         =>  0,
             'category'          =>  '',
             'tags'              =>  '',
@@ -395,8 +396,10 @@ class CourseServiceImpl extends BaseService implements CourseService
             'goals'             =>  array(),
             'audiences'         =>  array(),
             'parentId'          =>  0,
+            'status'            =>  'published',
             'createdTime'       =>  time(),
             'updatedTime'       =>  time(),
+
         ));
 
         return $fields;

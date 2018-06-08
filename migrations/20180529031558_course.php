@@ -12,25 +12,27 @@ class Course extends Migration
         $biz = $this->getContainer();
         $connection = $biz['db'];
         $connection->exec("
-            CREATE TABLE IF NOT EXISTS `course` (
+            CREATE TABLE `course` (
               `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
               `title` varchar(1024) NOT NULL COMMENT '课程标题',
               `subtitle` varchar(1024) NOT NULL DEFAULT '' COMMENT '副标题',
-              `status` enum('draft','published','closed') NOT NULL DEFAULT 'draft' COMMENT '课程状态',
+              `price` float(10,2) NOT NULL DEFAULT '0.00',
+              `serializeMode` enum('none','serialize','finished') DEFAULT 'none',
               `type` varchar(255) NOT NULL DEFAULT 'normal' COMMENT '课程类型',
-              `lessonNum` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '课时数量',
-              `category` text DEFAULT NULL COMMENT '分类',
-              `tags` text DEFAULT NULL COMMENT '标签',
-              `keypoints` text DEFAULT NULL COMMENT '知识点',
+              `lessonNum` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '课时数量',
+              `category` text COMMENT '分类',
+              `tags` text COMMENT '标签',
+              `keypoints` text COMMENT '知识点',
               `smallPicture` varchar(255) NOT NULL DEFAULT '' COMMENT '小图片',
               `middlePicture` varchar(255) NOT NULL DEFAULT '' COMMENT '中图片',
               `largePicture` varchar(255) NOT NULL DEFAULT '' COMMENT '大图片',
-              `about` text DEFAULT NULL COMMENT '课程介绍',
-              `goals` text DEFAULT NULL COMMENT '课程目标',
-              `audiences` text DEFAULT NULL COMMENT '适用人群',
-              `parentId` bigint(20) unsigned NOT NULL DEFAULT 0 COMMENT '课程的父Id',
+              `about` text COMMENT '课程介绍',
+              `goals` text COMMENT '课程目标',
+              `audiences` text COMMENT '适用人群',
+              `parentId` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT '课程的父Id',
+              `status` enum('draft','published','closed') NOT NULL DEFAULT 'draft' COMMENT '课程状态',
               `createdTime` int(10) unsigned NOT NULL COMMENT '创建时间',
-              `updatedTime` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '最后更新时间',
+              `updatedTime` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '最后更新时间',
               PRIMARY KEY (`id`),
               KEY `updatedTime` (`updatedTime`) USING BTREE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
